@@ -1,3 +1,4 @@
 Gunicorn
 Django==2.0.3
 googlemaps
+django-heroku
