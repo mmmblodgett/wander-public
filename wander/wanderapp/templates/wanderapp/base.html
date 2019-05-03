@@ -8,12 +8,18 @@
         <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
         <title>{% block title %}{% endblock %}</title>
         {% block script %}{% endblock %}
+        <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+        </style>
     </head>
     <body>
         <!-- Navbar -->
         <nav class="navbar navbar-expand-md navbar-light bg-light border sticky-top">
             <div class="container-fluid">
-                <a class="navbar-brand" href="{% url 'index' %}"><span class="brand">Pinnochio's Pizza</span></a>
+                <a class="navbar-brand" href="{% url 'index' %}"><span class="brand">wander</span></a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                 </button>
@@ -21,7 +27,7 @@
                     <ul class="navbar-nav ml-auto">
                         <!-- Links to user cart and log out (if logged in) -->
                         {% if request.user.is_authenticated %}
-                        <li class="nav-item"><a class="nav-link" href=""><strong>{{ request.user }}'s Cart</strong></a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'view_user' request.user.id %}">Logged in as <strong>{{ request.user }}</strong></a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'applogout' %}">Log Out</a></li>
                         <!-- Links to log in or register (if not logged in) -->
                         {% else %}

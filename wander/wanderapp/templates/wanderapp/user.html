@@ -1,0 +1,132 @@
+
+{% extends "wanderapp/base.html" %}
+
+{% block title %}
+    {{ username }}
+{% endblock %}
+
+{% block body %}
+<h1>
+    {% if my_profile %}
+        Your map:
+    {% else %}
+        {{ username }}'s map:
+    {% endif %}
+</h1>
+<div id="map"></div>
+
+{% if my_profile %}
+<br>
+<div>
+    <form action="/mark" method="post">
+        
+        <!-- search box -->
+        <div class="form-group">
+            <strong>Add a location:</strong><br>
+            <input id="places_auto" autocomplete="off" autofocus class="form-control" name="searchbox" placeholder="Enter a location"
+                type="text">
+        </div>
+
+        <button class="btn btn-primary" type="submit">Mark it!</button>
+        <button class="details" type="button" style="color:white;background-color:crimson;border-radius:4px;" onclick="showHideDetails()">Details</button>
+        
+        <br>
+        <div id="advanced" style="display:none">
+            <br>
+            <!-- Time range -->
+            <div class="form-group">
+                <strong>Start Date</strong>
+                <br>
+                <input id="start" type="date" name="start-time" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <strong>End Date</strong>
+                <br>
+                <input id="end" type="date" name="end-time" class="form-control">
+            </div>
+
+
+            <div class="form-group">
+                <strong>Notes</strong>
+                <br>
+                <input id="notes" type="text" name="notes" class="form-control">
+                <br>
+            </div>
+
+            <!-- rate -->
+            <strong>How would you rate your experience?</strong><br>
+
+            {% for i in "12345" %}
+                <div class="form-check form-check-inline">
+                    <input id="rating" class="form-check-input" type="radio" name="ratings" value="{{ i }}">
+                    <label class="form-check-label" for="inlineRadio1">{{ i }}</label>
+                </div>
+            {% endfor %}
+            <br><br>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+<script>
+    function initMap(f){
+        // Initialize map settings
+        var options = {
+            zoom: 2,
+            center: {lat:42.3601, lng:-71.0589}
+        };
+        var map = new google.maps.Map(
+            document.getElementById('map'), options);
+        // Adds a marker
+        function addMarker(lat, lng, name){
+            // Create marker
+            var marker = new google.maps.Marker({
+                position: {lat:lat, lng:lng},
+                // icon will drop from the top of the map to its final location
+                draggable: true,
+                animation: google.maps.Animation.DROP,
+                map:map,
+            });
+            // Add a marker label
+            var contentString = name;
+            var infoWindow = new google.maps.InfoWindow({
+                content: contentString
+            });
+            // Set label to display on click
+            marker.addListener('click', function(){
+                infoWindow.open(map, marker);
+            });
+        }
+        f();
+    }
+</script>
+
+<script>
+    function activatePlacesSearch() {
+        var input = document.getElementById('places_auto');
+        var autocomplete = new google.maps.places.Autocomplete(input);
+    }
+</script>
+
+<script>
+    function showHideDetails() {
+        var advanced = document.getElementById("advanced");
+        if (advanced.style.display == "none") {
+            advanced.style.display = "block";
+        }
+        else {
+            advanced.style.display = "none";
+        }
+    }
+</script>
+<script>
+    function init() {
+        initMap(activatePlacesSearch);
+    }
+</script>
+
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDWty8o-JfoqiS3iIyMFxt3qcZBc7a9fGo&libraries=places&callback=init">
+</script>
+{% endblock %}
