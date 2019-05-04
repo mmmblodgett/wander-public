@@ -1,0 +1,18 @@
+.form-control {
+    /* center form controls */
+    display: inline-block;
+  
+    /* override Bootstrap's 100% width for form controls */
+    width: auto;
+  }
+
+#map {
+    height: 400px;
+    width: 100%;
+}
+
+@font-face {
+    font-family: 'sans-serif';
+    src: url('../static/fonts/AdventPro-Regular.ttf')  format("truetype"),
+         local('advent');
+  }

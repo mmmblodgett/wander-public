@@ -4,11 +4,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.contrib.auth.models import User
+from .models import UserSettings, Place
 
 import googlemaps
 GM = googlemaps.Client(key="AIzaSyDWty8o-JfoqiS3iIyMFxt3qcZBc7a9fGo")
-
-
 
 # Create your views here.
 def index(request):
@@ -16,15 +15,78 @@ def index(request):
     return render(request, "wanderapp/index.html", context=context)
 
 def view_user(request, user_id):
+    user = User.objects.get(pk=user_id)
+    try:
+        new_place = request.session['new']
+    except:
+        new_place = False
     context = {
         "user_id": user_id,
-        "username": User.objects.get(pk=user_id).username,
+        "username": user.username,
         "my_profile": user_id == request.user.pk,
-        "places": None,
-        "GM": GM,
+        "privacy": user.settings.privacy,
+        "places": user.places.all(),
+        "new_place": new_place,
     }
+    request.session['new'] = False
     return render(request, "wanderapp/user.html", context=context)
 
+@login_required
+def delete(request):
+    try:
+        Place.objects.get(pk=request.POST['place_id']).delete()
+    except:
+        return HttpResponse("Place does not exist or could not be deleted")
+#    return view_user(request, request.user.id)
+    return HttpResponseRedirect("user/"+str(request.user.id))
+
+@login_required
+def mark(request):
+    place = request.POST['searchbox']
+    start_date = request.POST['start-time']
+    end_date = request.POST['end-time']
+    notes = request.POST['notes']
+
+    if place:
+        try:
+            geocode_result = GM.geocode(place)[0]
+        except:
+            return HttpResponse(place+" is not a valid place")
+
+        new_place = Place.objects.create(label = geocode_result['formatted_address'],
+        lat = geocode_result['geometry']['location']['lat'],
+        lng = geocode_result['geometry']['location']['lng'])
+        new_place.user.set([User.objects.get(pk=request.user.id)])
+    else:
+        return HttpResponse("Please input a place")
+
+    if start_date or end_date:
+        if not start_date:
+            return HttpResponse("Travel time is missing a start date")
+        if not end_date:
+            return HttpResponse("Travel time is missing an end date")
+        if start_date > end_date:
+            return HttpResponse("End date must be later than start date")
+        new_place.start_date = start_date
+        new_place.end_date = end_date
+
+    if notes:
+        new_place.notes = notes
+    
+    new_place.save()
+    request.session['new'] = True
+    return HttpResponseRedirect("user/"+str(request.user.id))
+
+@login_required
+def privacy(request):
+    setting = request.POST['setting']
+    try:
+        user = request.user
+        user.settings.privacy = setting
+        user.settings.save()
+        return HttpResponseRedirect("user/"+str(user.id))
+    except Exception as e:
+        return HttpResponse("Something went wrong - " + str(e))
 
 def appregister(request):
     """Render the register page and handle the creation of a new user"""
@@ -43,6 +105,8 @@ def appregister(request):
         try:
             user = User.objects.create_user(request.POST["username"], request.POST["email"], request.POST["password"])
             login(request, user)
+            # Create user settings object
+            UserSettings.objects.create(user=user)
             return HttpResponseRedirect(reverse("index"))
         except:
             return render(request, "wanderapp/register.html", {"message": "Username is already in use"})

@@ -5,7 +5,13 @@
     {{ username }}
 {% endblock %}
 
+{% block script %}
+{% load static %}
+<script src="{% static 'wanderapp/user.js' %}"></script>
+{% endblock %}
+
 {% block body %}
+{% if my_profile or privacy == "public" %}
 <h1>
     {% if my_profile %}
         Your map:
@@ -14,21 +20,63 @@
     {% endif %}
 </h1>
 <div id="map"></div>
+{% else %}
+<h1>{{ username }}'s privacy settings restrict you from viewing their map</h1>
+{% endif %}
 
 {% if my_profile %}
 <br>
-<div>
-    <form action="/mark" method="post">
-        
+<div class="row">
+<div class="col">
+    <strong>Privacy</strong><br>
+    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+        <label id="public" class="btn btn-secondary" onclick="updatePrivacy('public')">
+            <input type="radio" name="privacy" autocomplete="off" checked> Public
+        </label>
+        <label id="friends" class="btn btn-secondary" onclick="updatePrivacy('friends')">
+            <input type="radio" name="privacy" autocomplete="off"> Friends Only
+        </label>
+        <label id="hidden" class="btn btn-secondary" onclick="updatePrivacy('hidden')">
+            <input type="radio" name="privacy" autocomplete="off"> Hidden
+        </label>
+    </div>
+    {% if places %}
+    <div style="margin-top:1vw">
+        <strong>Your Places</strong><br>
+        <table class="table table-striped tablesorter">
+            <tbody>
+                {% for place in places %}
+                    <tr>
+                        <td>{{ place.label }}</td>
+                        <td>{% if place.start_date %}{{ place.start_date }}{% endif %}</td>
+                        <td>{% if place.end_date %}{{ place.end_date }}{% endif %}</td>
+                        <td>
+                            <form action="{% url 'delete' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="place_id" value="{{ place.id }}">
+                                <button type="submit" class="glyphicon glyphicon-trash" aria-hidden="true"></button>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+<div class="col">
+    <form action="{% url 'mark' %}" method="post">
+        {% csrf_token %}
         <!-- search box -->
         <div class="form-group">
-            <strong>Add a location:</strong><br>
+            <strong>Add a location</strong><br>
             <input id="places_auto" autocomplete="off" autofocus class="form-control" name="searchbox" placeholder="Enter a location"
                 type="text">
         </div>
 
         <button class="btn btn-primary" type="submit">Mark it!</button>
-        <button class="details" type="button" style="color:white;background-color:crimson;border-radius:4px;" onclick="showHideDetails()">Details</button>
+        <button id="details" class="btn btn-light" type="button" onclick="showHideDetails()">Details</button>
         
         <br>
         <div id="advanced" style="display:none">
@@ -53,77 +101,88 @@
                 <input id="notes" type="text" name="notes" class="form-control">
                 <br>
             </div>
-
-            <!-- rate -->
-            <strong>How would you rate your experience?</strong><br>
-
-            {% for i in "12345" %}
-                <div class="form-check form-check-inline">
-                    <input id="rating" class="form-check-input" type="radio" name="ratings" value="{{ i }}">
-                    <label class="form-check-label" for="inlineRadio1">{{ i }}</label>
-                </div>
-            {% endfor %}
-            <br><br>
         </div>
     </form>
+</div>
 </div>
 {% endif %}
 
 <script>
-    function initMap(f){
-        // Initialize map settings
-        var options = {
-            zoom: 2,
-            center: {lat:42.3601, lng:-71.0589}
-        };
-        var map = new google.maps.Map(
-            document.getElementById('map'), options);
-        // Adds a marker
-        function addMarker(lat, lng, name){
-            // Create marker
-            var marker = new google.maps.Marker({
-                position: {lat:lat, lng:lng},
-                // icon will drop from the top of the map to its final location
-                draggable: true,
-                animation: google.maps.Animation.DROP,
-                map:map,
-            });
-            // Add a marker label
-            var contentString = name;
-            var infoWindow = new google.maps.InfoWindow({
-                content: contentString
-            });
-            // Set label to display on click
-            marker.addListener('click', function(){
-                infoWindow.open(map, marker);
-            });
-        }
-        f();
-    }
-</script>
+// Show user's current privacy selection
+document.addEventListener('DOMContentLoaded', () => {
+    private_value="{{ privacy }}";
+    document.getElementById(private_value).className += " active";
+});
 
-<script>
-    function activatePlacesSearch() {
-        var input = document.getElementById('places_auto');
-        var autocomplete = new google.maps.places.Autocomplete(input);
-    }
-</script>
+// Submit a change in privacy settings as a form
+function updatePrivacy(setting) {
+    post("{% url 'privacy' %}", {
+        csrfmiddlewaretoken: "{{ csrf_token }}",
+        setting: setting,
+    });
+}
 
-<script>
-    function showHideDetails() {
-        var advanced = document.getElementById("advanced");
-        if (advanced.style.display == "none") {
-            advanced.style.display = "block";
+function initMap(f) {
+    // Initialize map settings
+    var options = {
+        zoom: 2,
+        center: {lat:42.3601, lng:-71.0589}
+    };
+    var map = new google.maps.Map(
+        document.getElementById('map'), options);
+
+    // Call function to initialize places search
+    f();
+
+    // For each place in places add a marker
+    markers = [];
+    {% for place in places %}
+    var lat = {{ place.lat }};
+    var lng = {{ place.lng }};
+    var label = "<h6>{{ place.label }}</h6>{{ place.notes }}";
+    addMarker(lat, lng, label);
+    {% endfor %}
+
+    // If a new place has just been entered center on it
+    {% if new_place %}
+    new_marker = markers.pop();
+    map.setCenter({lat:new_marker['lat'], lng:new_marker['lng']});
+    map.setZoom(4);
+
+    {% else %}
+    // Otherwise zoom to fit all of the users' markers
+    if (markers.length != 0) {
+        var bounds = new google.maps.LatLngBounds();
+        for (var i = 0; i < markers.length; i++) {
+            bounds.extend(markers[i].getPosition());
         }
-        else {
-            advanced.style.display = "none";
-        }
+        map.fitBounds(bounds);
     }
-</script>
-<script>
-    function init() {
-        initMap(activatePlacesSearch);
+    {% endif %}
+
+    // Adds a marker
+    function addMarker(lat, lng, name){
+        // Create marker
+        var marker = new google.maps.Marker({
+            position: {lat:lat, lng:lng},
+            // icon will drop from the top of the map to its final location
+            draggable: false,
+            animation: google.maps.Animation.DROP,
+            map:map,
+        });
+        // Keep track of markers
+        markers.push({'lat':lat,'lng':lng})
+        // Add a marker label
+        var contentString = name;
+        var infoWindow = new google.maps.InfoWindow({
+            content: contentString
+        });
+        // Set label to display on click
+        marker.addListener('click', function(){
+            infoWindow.open(map, marker);
+        });
     }
+}
 </script>
 
 <script async defer
