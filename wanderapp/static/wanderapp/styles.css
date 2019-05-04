@@ -10,9 +10,3 @@
     height: 400px;
     width: 100%;
 }
-
-@font-face {
-    font-family: 'sans-serif';
-    src: url('../static/fonts/AdventPro-Regular.ttf')  format("truetype"),
-         local('advent');
-  }
