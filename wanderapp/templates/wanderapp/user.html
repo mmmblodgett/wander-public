@@ -14,9 +14,9 @@
 {% if my_profile or privacy == "public" %}
 <h1>
     {% if my_profile %}
-        Your map:
+        Your map
     {% else %}
-        {{ username }}'s map:
+        {{ username }}'s map
     {% endif %}
 </h1>
 <div id="map"></div>
@@ -74,7 +74,13 @@
             <input id="places_auto" autocomplete="off" autofocus class="form-control" name="searchbox" placeholder="Enter a location"
                 type="text">
         </div>
-
+        <select name="flag" class="form-control" style="margin-bottom:1vw">
+            <option value="visited">I visited here</option>
+            <option value="wishlist">I want to visit here</option>
+            <option value="lived">I lived here</option>
+            <option value="other">Other</option>
+        </select>
+        <br>    
         <button class="btn btn-primary" type="submit">Mark it!</button>
         <button id="details" class="btn btn-light" type="button" onclick="showHideDetails()">Details</button>
         
@@ -126,11 +132,21 @@ function initMap(f) {
     // Initialize map settings
     var options = {
         zoom: 2,
-        center: {lat:42.3601, lng:-71.0589}
+        styles: style,
+        center: {lat:42.3601, lng:-71.0589},
+        mapTypeControl: false,
+        streetViewControl: false,
     };
+
     var map = new google.maps.Map(
         document.getElementById('map'), options);
 
+    var icons = {
+        visited: "http://labs.google.com/ridefinder/images/mm_20_black.png",
+        wishlist: "http://labs.google.com/ridefinder/images/mm_20_white.png",
+        lived: "http://labs.google.com/ridefinder/images/mm_20_orange.png",
+        other: "http://labs.google.com/ridefinder/images/mm_20_gray.png",
+    };
     // Call function to initialize places search
     f();
 
@@ -140,7 +156,8 @@ function initMap(f) {
     var lat = {{ place.lat }};
     var lng = {{ place.lng }};
     var label = "<h6>{{ place.label }}</h6>{{ place.notes }}";
-    addMarker(lat, lng, label);
+    var flag = '{{ place.flag }}';
+    addMarker(lat, lng, label, flag);
     {% endfor %}
 
     // If a new place has just been entered center on it
@@ -153,25 +170,27 @@ function initMap(f) {
     // Otherwise zoom to fit all of the users' markers
     if (markers.length != 0) {
         var bounds = new google.maps.LatLngBounds();
-        for (var i = 0; i < markers.length; i++) {
-            bounds.extend(markers[i].getPosition());
+        for (var i = 0; i < markers.length - 1; i++) {
+            bounds.extend(markers[i].marker.getPosition());
         }
         map.fitBounds(bounds);
     }
+
     {% endif %}
 
+    
     // Adds a marker
-    function addMarker(lat, lng, name){
+    function addMarker(lat, lng, name, flag){
         // Create marker
         var marker = new google.maps.Marker({
             position: {lat:lat, lng:lng},
             // icon will drop from the top of the map to its final location
             draggable: false,
-            animation: google.maps.Animation.DROP,
+            icon: icons[flag],
             map:map,
         });
         // Keep track of markers
-        markers.push({'lat':lat,'lng':lng})
+        markers.push({'lat':lat,'lng':lng, 'marker':marker})
         // Add a marker label
         var contentString = name;
         var infoWindow = new google.maps.InfoWindow({
@@ -183,6 +202,290 @@ function initMap(f) {
         });
     }
 }
+
+// map style generate with https://mapstyle.withgoogle.com/ 
+var style = [
+  {
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#ebe3cd"
+      }
+    ]
+  },
+  {
+    "elementType": "labels",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#523735"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#f5f1e6"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#c9b2a6"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.country",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "color": "#6e917c"
+      },
+      {
+        "visibility": "simplified"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.land_parcel",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.land_parcel",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#dcd2be"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.land_parcel",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#ae9e90"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.locality",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "color": "#fff9d5"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.neighborhood",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.province",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "color": "#94aa9f"
+      },
+      {
+        "visibility": "simplified"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.natural",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#dfd2ae"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#dfd2ae"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#93817c"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#a5b076"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#447530"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#f5f1e6"
+      }
+    ]
+  },
+  {
+    "featureType": "road.arterial",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#fdfcf8"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#f8c967"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#e9bc62"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway.controlled_access",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#e98d58"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway.controlled_access",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#db8555"
+      }
+    ]
+  },
+  {
+    "featureType": "road.local",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#806b63"
+      }
+    ]
+  },
+  {
+    "featureType": "transit.line",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#dfd2ae"
+      }
+    ]
+  },
+  {
+    "featureType": "transit.line",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#8f7d77"
+      }
+    ]
+  },
+  {
+    "featureType": "transit.line",
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#ebe3cd"
+      }
+    ]
+  },
+  {
+    "featureType": "transit.station",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#dfd2ae"
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#b9d3c2"
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#92998d"
+      }
+    ]
+  }
+]
+
+;
 </script>
 
 <script async defer

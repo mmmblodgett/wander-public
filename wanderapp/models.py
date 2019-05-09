@@ -11,8 +11,9 @@ class UserSettings(models.Model):
 class Place(models.Model):
     user = models.ManyToManyField(User, related_name="places")
     label = models.CharField(max_length=128)
-    lat = models.DecimalField(max_digits=10, decimal_places=4)
-    lng = models.DecimalField(max_digits=10, decimal_places=4)
+    lat = models.DecimalField(max_digits=10, decimal_places=7)
+    lng = models.DecimalField(max_digits=10, decimal_places=7)
+    flag = models.CharField(max_length=16)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
     notes = models.TextField(blank=True)

@@ -46,8 +46,9 @@ def mark(request):
     start_date = request.POST['start-time']
     end_date = request.POST['end-time']
     notes = request.POST['notes']
+    flag=request.POST['flag']
 
-    if place:
+    if place and flag:
         try:
             geocode_result = GM.geocode(place)[0]
         except:
@@ -55,7 +56,8 @@ def mark(request):
 
         new_place = Place.objects.create(label = geocode_result['formatted_address'],
         lat = geocode_result['geometry']['location']['lat'],
-        lng = geocode_result['geometry']['location']['lng'])
+        lng = geocode_result['geometry']['location']['lng'],
+        flag = flag)
         new_place.user.set([User.objects.get(pk=request.user.id)])
     else:
         return HttpResponse("Please input a place")
