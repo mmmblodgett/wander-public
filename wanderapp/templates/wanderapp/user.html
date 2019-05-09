@@ -48,8 +48,8 @@
                 {% for place in places %}
                     <tr>
                         <td>{{ place.label }}</td>
-                        <td>{% if place.start_date %}{{ place.start_date }}{% endif %}</td>
-                        <td>{% if place.end_date %}{{ place.end_date }}{% endif %}</td>
+                        <td>{% if place.start_date %}{{ place.start_date }}{% endif %} -
+                            {% if place.end_date %}{{ place.end_date }}{% endif %}</td>
                         <td>
                             <form action="{% url 'delete' %}" method="POST">
                                 {% csrf_token %}
@@ -104,7 +104,7 @@
             <div class="form-group">
                 <strong>Notes</strong>
                 <br>
-                <input id="notes" type="text" name="notes" class="form-control">
+                <input id="notes" type="text" name="notes" class="form-control" autocomplete="off">
                 <br>
             </div>
         </div>
