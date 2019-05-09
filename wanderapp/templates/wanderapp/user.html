@@ -49,7 +49,7 @@
                     <tr>
                         <td>{{ place.label }}</td>
                         <td>{% if place.start_date %}{{ place.start_date }}{% endif %}</td> 
-                        <td>-</td>
+                        <td>{% if place.start_date %}-{% endif %}</td>
                         <td>{% if place.end_date %}{{ place.end_date }}{% endif %}</td>
                         <td>
                             <form action="{% url 'delete' %}" method="POST">
