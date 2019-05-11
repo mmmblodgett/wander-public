@@ -6,7 +6,34 @@
 {% endblock %}
 
 {% block body %}
+<div class="hero-image">
+    <div class="hero-text">
+        experience your world
+    </div>
+</div>
+<div class="form-group">
+    <strong>Find a user</strong><br>
+    <input id="user_search" autocomplete="off" autofocus class="form-control" name="user_search" 
+        placeholder="Username" type="text">
+</div>
+<div id="content">
+</div>
 
-INDEX
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let input = document.querySelector('input');
+    input.onkeyup = () => {
+        var html = "";
+        if (input.value) {
+            {% for user in users %}
+                if ("{{ user.username }}".toLowerCase().includes(input.value.toLowerCase())) {
+                    html += `<a href={% url 'view_user' user.id %}><h3>{{ user.username }}</h3></a>`;
+                }
+            {% endfor %}
+        }
+        document.querySelector('#content').innerHTML = html;
+    }
+});
+</script>
 
 {% endblock %}

@@ -11,7 +11,11 @@ GM = googlemaps.Client(key="AIzaSyDWty8o-JfoqiS3iIyMFxt3qcZBc7a9fGo")
 
 # Create your views here.
 def index(request):
-    context = {}
+    context = {
+        'users': [{'username': user.username,
+                    'id': user.id} 
+                    for user in User.objects.all()],
+    }
     return render(request, "wanderapp/index.html", context=context)
 
 def view_user(request, user_id):

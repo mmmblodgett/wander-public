@@ -10,3 +10,28 @@
     height: 400px;
     width: 100%;
 }
+
+#content {
+  color: teal;
+}
+
+#content a:hover {
+  color: inherit;
+}
+
+.hero-image {
+  background-image: url("/static/wanderapp/mountains.png");
+  height: 8vw;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  position: relative;
+  margin-bottom: 2vw;
+}
+
+.hero-text {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.795);
+  font-size: 5vw;
+  font-weight: 900;
+}
