@@ -1,8 +1,10 @@
+// Use google places api to have searchbox autocomplete with google places
 function activatePlacesSearch() {
     var input = document.getElementById('places_auto');
     var autocomplete = new google.maps.places.Autocomplete(input);
 }
 
+// Function to expand/collapse extra place details
 function showHideDetails() {
     var advanced = document.getElementById("advanced");
     if (advanced.style.display == "none") {
@@ -38,6 +40,7 @@ function post(path, params, method) {
     form.submit();
 }
 
+// Call map initialization and active google places api autocomplete
 function init() {
     initMap(activatePlacesSearch);
 }

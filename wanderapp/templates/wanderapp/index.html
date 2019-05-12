@@ -6,11 +6,14 @@
 {% endblock %}
 
 {% block body %}
+<!-- Header image and text -->
 <div class="hero-image">
     <div class="hero-text">
         experience your world
     </div>
 </div>
+
+<!-- Searchbox -->
 <div class="form-group">
     <strong>Find a user</strong><br>
     <input id="user_search" autocomplete="off" autofocus class="form-control" name="user_search" 
@@ -21,10 +24,12 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Get search input
     let input = document.querySelector('input');
     input.onkeyup = () => {
         var html = "";
         if (input.value) {
+            // When there is an input loop through users and find matches
             {% for user in users %}
                 if ("{{ user.username }}".toLowerCase().includes(input.value.toLowerCase())) {
                     html += `<a href={% url 'view_user' user.id %}><h3>{{ user.username }}</h3></a>`;

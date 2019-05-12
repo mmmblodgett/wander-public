@@ -9,8 +9,11 @@ from .models import UserSettings, Place
 import googlemaps
 GM = googlemaps.Client(key="AIzaSyDWty8o-JfoqiS3iIyMFxt3qcZBc7a9fGo")
 
-# Create your views here.
 def index(request):
+    """Renders the main page with user search"""
+
+    # Get all users to populate autocomplete
+    # It seems like there's probably a more efficient way to do this?
     context = {
         'users': [{'username': user.username,
                     'id': user.id} 
@@ -18,12 +21,21 @@ def index(request):
     }
     return render(request, "wanderapp/index.html", context=context)
 
+
 def view_user(request, user_id):
+    """Render a user's profile and map"""
+
+    # Get the requested user
     user = User.objects.get(pk=user_id)
+
+    # Check if the user is adding a new location
+    # This feels kind of hacky but it wasn't working otherwise
     try:
         new_place = request.session['new']
     except:
         new_place = False
+
+    # Get user information
     context = {
         "user_id": user_id,
         "username": user.username,
@@ -32,40 +44,55 @@ def view_user(request, user_id):
         "places": user.places.all(),
         "new_place": new_place,
     }
+
+    # Clear the 'new loaction added' flag
     request.session['new'] = False
+
     return render(request, "wanderapp/user.html", context=context)
 
 @login_required
 def delete(request):
+    """Delete a marker"""
+
+    # Try to delete the place
     try:
         Place.objects.get(pk=request.POST['place_id']).delete()
     except:
         return HttpResponse("Place does not exist or could not be deleted")
-#    return view_user(request, request.user.id)
+
+    # Redirect to view_user
     return HttpResponseRedirect("user/"+str(request.user.id))
 
 @login_required
 def mark(request):
+    """Add a new marker"""
+
+    # Get the place information
     place = request.POST['searchbox']
     start_date = request.POST['start-time']
     end_date = request.POST['end-time']
     notes = request.POST['notes']
     flag=request.POST['flag']
 
+    # Verify that a place was entered
     if place and flag:
+        # Find google data for place
         try:
             geocode_result = GM.geocode(place)[0]
         except:
             return HttpResponse(place+" is not a valid place")
 
+        # Create a new place object with location data
         new_place = Place.objects.create(label = geocode_result['formatted_address'],
         lat = geocode_result['geometry']['location']['lat'],
         lng = geocode_result['geometry']['location']['lng'],
         flag = flag)
         new_place.user.set([User.objects.get(pk=request.user.id)])
+
     else:
         return HttpResponse("Please input a place")
 
+    # If user input dates verify and add them
     if start_date or end_date:
         if not start_date:
             return HttpResponse("Travel time is missing a start date")
@@ -76,16 +103,29 @@ def mark(request):
         new_place.start_date = start_date
         new_place.end_date = end_date
 
+    # If user added a note add it
     if notes:
         new_place.notes = notes
     
+    # Save the new place
     new_place.save()
+
+    # Set the 'new place' flag to true and redirect to user
     request.session['new'] = True
     return HttpResponseRedirect("user/"+str(request.user.id))
 
 @login_required
 def privacy(request):
+    """Change privacy setting"""
+
+    # Get user's selection
     setting = request.POST['setting']
+
+    # Update the user settings to the new setting
+    # I wanted to do this without refreshing the page,
+    # ideally with a js element alerting the user of success
+    # or failure, but couldn't figure out how to return a js
+    # response rather than http
     try:
         user = request.user
         user.settings.privacy = setting

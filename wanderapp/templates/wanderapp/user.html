@@ -11,6 +11,8 @@
 {% endblock %}
 
 {% block body %}
+
+<!-- Render map is current user has permission to view it -->
 {% if my_profile or privacy == "public" %}
 <h1>
     {% if my_profile %}
@@ -24,10 +26,12 @@
 <h1>{{ username }}'s privacy settings restrict you from viewing their map</h1>
 {% endif %}
 
+<!-- If user is viewing their own profile show settings -->
 {% if my_profile %}
 <br>
 <div class="row">
 <div class="col">
+    <!-- Change privacy setting -->
     <strong>Privacy</strong><br>
     <div class="btn-group btn-group-toggle" data-toggle="buttons">
         <label id="public" class="btn btn-secondary" onclick="updatePrivacy('public')">
@@ -41,6 +45,8 @@
         </label>
     </div>
     {% if places %}
+
+    <!-- List user's marked places -->
     <div style="margin-top:1vw">
         <strong>Your Places</strong><br>
         <table class="table table-striped tablesorter">
@@ -52,6 +58,7 @@
                         <td>{% if place.start_date %}-{% endif %}</td>
                         <td>{% if place.end_date %}{{ place.end_date }}{% endif %}</td>
                         <td>
+                            <!-- Button to delete a place -->
                             <form action="{% url 'delete' %}" method="POST">
                                 {% csrf_token %}
                                 <input type="hidden" name="place_id" value="{{ place.id }}">
@@ -69,12 +76,14 @@
 <div class="col">
     <form action="{% url 'mark' %}" method="post">
         {% csrf_token %}
-        <!-- search box -->
+        <!-- add a location searchbox -->
         <div class="form-group">
             <strong>Add a location</strong><br>
             <input id="places_auto" autocomplete="off" autofocus class="form-control" name="searchbox" placeholder="Enter a location"
                 type="text">
         </div>
+
+        <!-- Visited flag select -->
         <select name="flag" class="form-control" style="margin-bottom:1vw">
             <option value="visited">I visited here</option>
             <option value="wishlist">I want to visit here</option>
@@ -84,8 +93,8 @@
         <br>    
         <button class="btn btn-primary" type="submit">Mark it!</button>
         <button id="details" class="btn btn-light" type="button" onclick="showHideDetails()">Details</button>
-        
         <br>
+        <!-- Additional place options -->
         <div id="advanced" style="display:none">
             <br>
             <!-- Time range -->
@@ -94,14 +103,13 @@
                 <br>
                 <input id="start" type="date" name="start-time" class="form-control">
             </div>
-
             <div class="form-group">
                 <strong>End Date</strong>
                 <br>
                 <input id="end" type="date" name="end-time" class="form-control">
             </div>
 
-
+            <!-- Notes -->
             <div class="form-group">
                 <strong>Notes</strong>
                 <br>
@@ -143,6 +151,7 @@ function initMap(f) {
     var map = new google.maps.Map(
         document.getElementById('map'), options);
 
+    // Load icons for markers
     var icons = {
         visited: "http://labs.google.com/ridefinder/images/mm_20_black.png",
         wishlist: "http://labs.google.com/ridefinder/images/mm_20_white.png",
