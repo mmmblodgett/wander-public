@@ -1,4 +1,4 @@
 Gunicorn
-Django==2.0.3
+Django==2.0.12
 googlemaps
 django-heroku
